@@ -1,0 +1,315 @@
+{
+  "entities": {
+    "StoreTransactionDoc": {
+      "title": "StoreTransactionDoc",
+      "description": "Cloud-synchronized retail POS bill transaction for New Farm Product.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Google UID of the store account."
+        },
+        "billNumber": {
+          "type": "string",
+          "description": "Unique human-readable bill number (e.g. NFP-20261111-0001)."
+        },
+        "staffId": {
+          "type": "string",
+          "description": "Staff profile ID who recorded the bill."
+        },
+        "staffName": {
+          "type": "string",
+          "description": "Display name of the staff member."
+        },
+        "grandTotal": {
+          "type": "number",
+          "description": "Total bill amount in INR."
+        },
+        "lineCount": {
+          "type": "integer",
+          "description": "Number of distinct product lines in the bill."
+        },
+        "itemsSummary": {
+          "type": "string",
+          "description": "Compact summary of items sold and price snapshots."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["CASH", "UPI", "CARD"],
+          "description": "Payment mode used for the bill."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["COMPLETED", "CANCELLED"],
+          "description": "Current status of the bill."
+        },
+        "isRepeatCustomer": {
+          "type": "boolean",
+          "description": "True if this bill belongs to a repeat customer in the same visit."
+        },
+        "cancellationReason": {
+          "type": "string",
+          "description": "Optional reason when status is CANCELLED."
+        },
+        "saleEpochMillis": {
+          "type": "integer",
+          "description": "Local epoch timestamp when the sale occurred."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when first synced (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "billNumber",
+        "staffId",
+        "staffName",
+        "grandTotal",
+        "lineCount",
+        "itemsSummary",
+        "paymentMethod",
+        "status",
+        "isRepeatCustomer",
+        "saleEpochMillis",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StoreVisitorDoc": {
+      "title": "StoreVisitorDoc",
+      "description": "Cloud-synchronized visitor counter event for New Farm Product.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Google UID of the store account."
+        },
+        "dateKey": {
+          "type": "string",
+          "description": "Date key in YYYY-MM-DD format."
+        },
+        "delta": {
+          "type": "integer",
+          "description": "+1 for visitor arrival or -1 for audited correction."
+        },
+        "staffId": {
+          "type": "string",
+          "description": "Staff ID who logged the visitor count."
+        },
+        "staffName": {
+          "type": "string",
+          "description": "Staff display name."
+        },
+        "correctionReason": {
+          "type": "string",
+          "description": "Optional reason if delta is -1."
+        },
+        "eventEpochMillis": {
+          "type": "integer",
+          "description": "Local epoch timestamp when visitor was logged."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "dateKey",
+        "delta",
+        "staffId",
+        "staffName",
+        "eventEpochMillis",
+        "createdAt"
+      ]
+    },
+    "StoreFreezerSectionDoc": {
+      "title": "StoreFreezerSectionDoc",
+      "description": "Cloud-synchronized freezer section mapping and metadata forFreezers 1 to 7.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Google UID of the store account."
+        },
+        "freezerNumber": {
+          "type": "integer",
+          "description": "Freezer number from 1 to 7."
+        },
+        "sectionCode": {
+          "type": "string",
+          "description": "Section code such as Section A, Section B, Section C, Section D."
+        },
+        "mappedProducts": {
+          "type": "string",
+          "description": "Comma-separated or searchable list of products in this section."
+        },
+        "manualNotes": {
+          "type": "string",
+          "description": "Manual placement notes entered by staff."
+        },
+        "updatedByStaffName": {
+          "type": "string",
+          "description": "Name of the staff member who last updated this section."
+        },
+        "updatedEpochMillis": {
+          "type": "integer",
+          "description": "Local epoch timestamp of the section update."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "freezerNumber",
+        "sectionCode",
+        "mappedProducts",
+        "manualNotes",
+        "updatedByStaffName",
+        "updatedEpochMillis",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StoreProductDoc": {
+      "title": "StoreProductDoc",
+      "description": "Cloud-synchronized product rate and catalogue record.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Google UID of the store account."
+        },
+        "nameEn": {
+          "type": "string",
+          "description": "Product name in English."
+        },
+        "nameBn": {
+          "type": "string",
+          "description": "Product name in Bengali."
+        },
+        "unitType": {
+          "type": "string",
+          "enum": ["KG", "GRAM", "PIECE", "PACKET"],
+          "description": "Selling unit type."
+        },
+        "currentRate": {
+          "type": "number",
+          "description": "Configured selling rate in INR."
+        },
+        "isRateConfigured": {
+          "type": "boolean",
+          "description": "True if the selling rate has been explicitly set by the Owner."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the product is active for POS billing."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "nameEn",
+        "nameBn",
+        "unitType",
+        "currentRate",
+        "isRateConfigured",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StoreAuditLogDoc": {
+      "title": "StoreAuditLogDoc",
+      "description": "Immutable cloud audit log for financial and inventory actions.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Google UID of the store account."
+        },
+        "actorName": {
+          "type": "string",
+          "description": "Staff display name."
+        },
+        "actorRole": {
+          "type": "string",
+          "description": "Role code (OWNER, MANAGER, STAFF)."
+        },
+        "actionType": {
+          "type": "string",
+          "description": "Action identifier."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Human-readable audit description."
+        },
+        "eventEpochMillis": {
+          "type": "integer",
+          "description": "Local epoch timestamp."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "actorName",
+        "actorRole",
+        "actionType",
+        "summary",
+        "eventEpochMillis",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/store_transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/StoreTransactionDoc" },
+      "description": "Cloud-synced POS bills scoped to the authenticated store account."
+    },
+    "/users/{userId}/store_visitors/{visitorId}": {
+      "schema": { "$ref": "#/entities/StoreVisitorDoc" },
+      "description": "Cloud-synced visitor logs scoped to the authenticated store account."
+    },
+    "/users/{userId}/store_freezers/{sectionId}": {
+      "schema": { "$ref": "#/entities/StoreFreezerSectionDoc" },
+      "description": "Cloud-synced 7-freezer section records scoped to the authenticated store account."
+    },
+    "/users/{userId}/store_products/{productId}": {
+      "schema": { "$ref": "#/entities/StoreProductDoc" },
+      "description": "Cloud-synced product rates scoped to the authenticated store account."
+    },
+    "/users/{userId}/store_audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/StoreAuditLogDoc" },
+      "description": "Cloud-synced audit trail scoped to the authenticated store account."
+    }
+  }
+}

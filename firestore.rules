@@ -1,0 +1,210 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTransaction(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId.size() <= 128 &&
+             data.billNumber is string && data.billNumber.size() >= 3 && data.billNumber.size() <= 64 &&
+             data.staffId is string && data.staffId.size() >= 1 && data.staffId.size() <= 64 &&
+             data.staffName is string && data.staffName.size() >= 1 && data.staffName.size() <= 100 &&
+             (data.grandTotal is int || data.grandTotal is float) && data.grandTotal >= 0 &&
+             data.lineCount is int && data.lineCount >= 1 && data.lineCount <= 500 &&
+             data.itemsSummary is string && data.itemsSummary.size() >= 1 && data.itemsSummary.size() <= 4000 &&
+             data.paymentMethod is string && (data.paymentMethod == 'CASH' || data.paymentMethod == 'UPI' || data.paymentMethod == 'CARD') &&
+             data.status is string && (data.status == 'COMPLETED' || data.status == 'CANCELLED') &&
+             data.isRepeatCustomer is bool &&
+             (!('cancellationReason' in data) || data.cancellationReason == null || (data.cancellationReason is string && data.cancellationReason.size() <= 500)) &&
+             data.saleEpochMillis is int && data.saleEpochMillis >= 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidVisitor(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId.size() <= 128 &&
+             data.dateKey is string && data.dateKey.size() == 10 &&
+             data.delta is int && (data.delta == 1 || data.delta == -1) &&
+             data.staffId is string && data.staffId.size() >= 1 && data.staffId.size() <= 64 &&
+             data.staffName is string && data.staffName.size() >= 1 && data.staffName.size() <= 100 &&
+             (!('correctionReason' in data) || data.correctionReason == null || (data.correctionReason is string && data.correctionReason.size() <= 500)) &&
+             data.eventEpochMillis is int && data.eventEpochMillis >= 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidFreezerSection(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId.size() <= 128 &&
+             data.freezerNumber is int && data.freezerNumber >= 1 && data.freezerNumber <= 7 &&
+             data.sectionCode is string && data.sectionCode.size() >= 1 && data.sectionCode.size() <= 40 &&
+             data.mappedProducts is string && data.mappedProducts.size() <= 2000 &&
+             data.manualNotes is string && data.manualNotes.size() <= 2000 &&
+             data.updatedByStaffName is string && data.updatedByStaffName.size() >= 1 && data.updatedByStaffName.size() <= 100 &&
+             data.updatedEpochMillis is int && data.updatedEpochMillis >= 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidProduct(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId.size() <= 128 &&
+             data.nameEn is string && data.nameEn.size() >= 1 && data.nameEn.size() <= 120 &&
+             data.nameBn is string && data.nameBn.size() >= 1 && data.nameBn.size() <= 120 &&
+             data.unitType is string && (data.unitType == 'KG' || data.unitType == 'GRAM' || data.unitType == 'PIECE' || data.unitType == 'PACKET') &&
+             (data.currentRate is int || data.currentRate is float) && data.currentRate >= 0 &&
+             data.isRateConfigured is bool &&
+             data.isActive is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAuditLog(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId.size() <= 128 &&
+             data.actorName is string && data.actorName.size() >= 1 && data.actorName.size() <= 100 &&
+             data.actorRole is string && data.actorRole.size() >= 1 && data.actorRole.size() <= 40 &&
+             data.actionType is string && data.actionType.size() >= 1 && data.actionType.size() <= 80 &&
+             data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 2000 &&
+             data.eventEpochMillis is int && data.eventEpochMillis >= 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId}/store_transactions/{transactionId} {
+      allow get: if isOwner(userId) && isValidId(transactionId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(transactionId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'billNumber', 'staffId', 'staffName', 'grandTotal',
+                         'lineCount', 'itemsSummary', 'paymentMethod', 'status',
+                         'isRepeatCustomer', 'saleEpochMillis', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'billNumber', 'staffId', 'staffName', 'grandTotal',
+                         'lineCount', 'itemsSummary', 'paymentMethod', 'status',
+                         'isRepeatCustomer', 'cancellationReason', 'saleEpochMillis',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidTransaction(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(transactionId) &&
+                       isValidTransaction(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().billNumber == existing().billNumber &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'status', 'cancellationReason', 'updatedAt'
+                       ]);
+      // Completed transactions are never physically deleted
+      allow delete: if false;
+    }
+
+    match /users/{userId}/store_visitors/{visitorId} {
+      allow get: if isOwner(userId) && isValidId(visitorId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(visitorId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'dateKey', 'delta', 'staffId', 'staffName',
+                         'eventEpochMillis', 'createdAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'dateKey', 'delta', 'staffId', 'staffName',
+                         'correctionReason', 'eventEpochMillis', 'createdAt'
+                       ]) &&
+                       isValidVisitor(incoming(), userId);
+      allow update, delete: if false;
+    }
+
+    match /users/{userId}/store_freezers/{sectionId} {
+      allow get: if isOwner(userId) && isValidId(sectionId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(sectionId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'freezerNumber', 'sectionCode', 'mappedProducts',
+                         'manualNotes', 'updatedByStaffName', 'updatedEpochMillis',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'freezerNumber', 'sectionCode', 'mappedProducts',
+                         'manualNotes', 'updatedByStaffName', 'updatedEpochMillis',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidFreezerSection(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(sectionId) &&
+                       isValidFreezerSection(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().freezerNumber == existing().freezerNumber &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'sectionCode', 'mappedProducts', 'manualNotes',
+                         'updatedByStaffName', 'updatedEpochMillis', 'updatedAt'
+                       ]);
+      allow delete: if false;
+    }
+
+    match /users/{userId}/store_products/{productId} {
+      allow get: if isOwner(userId) && isValidId(productId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(productId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'nameEn', 'nameBn', 'unitType', 'currentRate',
+                         'isRateConfigured', 'isActive', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'nameEn', 'nameBn', 'unitType', 'currentRate',
+                         'isRateConfigured', 'isActive', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidProduct(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(productId) &&
+                       isValidProduct(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'nameEn', 'nameBn', 'unitType', 'currentRate',
+                         'isRateConfigured', 'isActive', 'updatedAt'
+                       ]);
+      allow delete: if false;
+    }
+
+    match /users/{userId}/store_audit_logs/{logId} {
+      allow get: if isOwner(userId) && isValidId(logId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(logId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'actorName', 'actorRole', 'actionType',
+                         'summary', 'eventEpochMillis', 'createdAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'actorName', 'actorRole', 'actionType',
+                         'summary', 'eventEpochMillis', 'createdAt'
+                       ]) &&
+                       isValidAuditLog(incoming(), userId);
+      allow update, delete: if false;
+    }
+  }
+}

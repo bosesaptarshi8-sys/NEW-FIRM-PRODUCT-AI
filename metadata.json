@@ -1,0 +1,6 @@
+{
+  "name": "New Farm Product",
+  "description": "AI-powered smart retail management system, 7-freezer section and photo finder, POS billing, and multilingual NEW FARM AI assistant for New Farm Product, Asansol.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

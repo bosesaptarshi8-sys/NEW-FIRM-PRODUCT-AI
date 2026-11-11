@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">New Farm Product</string>
+    <string name="brand_title">NEW FARM PRODUCT</string>
+    <string name="brand_tagline">50 Years of Trust. A Smarter Way Forward.</string>
+    <string name="brand_location">Asansol, West Bengal • Remote Kolkata Sync</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_billing">Billing</string>
+    <string name="nav_freezers">Freezers</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_ai">NEW FARM AI</string>
+    <string name="nav_settings">Settings</string>
+    <string name="wake_phrase_bn">হাই নিউ ফর্ম প্রোডাক্ট</string>
+    <string name="profit_disabled_notice">Gross Revenue Only — Profit calculations are disabled until actual purchase costs and operating expenses are configured.</string>
+    <string name="freezer_photo_honesty_notice">Photographs show top-layer arrangement as of the last update timestamp. Items stacked underneath must be verified manually by staff.</string>
+</resources>
